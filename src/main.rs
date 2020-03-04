@@ -33,7 +33,7 @@ fn bytes_to_num(bytes: &[u8], number: &mut u64) {
     }
 }
 
-pub fn self_locating(digits: &[u8]) -> Result<(), Error> {
+pub fn self_locating(count_from: usize, digits: &[u8]) -> Result<(), Error> {
     // could use zip() to handle indexes into π that might be greater than usize
     // let digit = digits.iter().zip(0u64..);
     for (i, &d) in digits.iter().enumerate() {
@@ -55,8 +55,8 @@ pub fn self_locating(digits: &[u8]) -> Result<(), Error> {
         );
         */
 
-        // we don't count from 0 :)
-        if number == (i + 1) as u64 {
+        // we count from 0 or 1 :)
+        if number == (i + count_from) as u64 {
             //println!("Found self locating number: {} at {}", number, i);
             println!("{}", number);
         }
@@ -76,11 +76,13 @@ fn show_benchmarks(bench: &[(&str, Duration)]) {
 // containing the first 1 million digits
 fn main() -> Result<(), Error> {
     let args: Vec<String> = env::args().collect();
-    let path = if args.len() > 1 {
-        &args[1]
-    } else {
-        "data/pi-1million.txt"
-    };
+    let mut count_from = 0;
+    let mut path = "data/pi-1million.txt";
+
+    if args.len() > 2 {
+        count_from = args[1].parse::<usize>().unwrap();
+        path = &args[2];
+    }
 
     println!("Calculating the self locating numbers in π:");
     let mut bench = Vec::new();
@@ -97,7 +99,8 @@ fn main() -> Result<(), Error> {
     let timer = Instant::now();
 
     // iterate over all digits in the main thread
-    self_locating(&pi_digits[2..]).expect("Error finding all self locating strings in π");
+    self_locating(count_from, &pi_digits[2..])
+        .expect("Error finding all self locating strings in π");
     bench.push(("Elapsed time", timer.elapsed()));
     show_benchmarks(&bench);
 
